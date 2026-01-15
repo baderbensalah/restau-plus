@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { OrderBoard } from "./components/OrderBoard";
+import { CheckCircle2 } from "lucide-react";
 
 export default async function OrdersPage() {
     const supabase = await createClient();
@@ -31,11 +32,22 @@ export default async function OrdersPage() {
         .order('created_at', { ascending: true });
 
     return (
-        <div className="p-6 space-y-6 h-full flex flex-col">
-            <div className="flex items-center justify-between">
+        <div className="p-8 space-y-8 h-full flex flex-col bg-gradient-to-br from-background via-[#050505] to-background">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6 whitespace-nowrap">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight glow-text text-primary">Live Kitchen Display</h1>
-                    <p className="text-muted-foreground">Manage order flow in real-time</p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="h-3 w-3 rounded-full bg-primary animate-pulse shadow-[0_0_8px_var(--primary)]" />
+                        <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/60">Real-time Operations</span>
+                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-white italic drop-shadow-2xl">
+                        KITCHEN <span className="text-primary glow-text">COMMAND</span>
+                    </h1>
+                </div>
+                <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
+                    <p className="text-xs font-black text-muted-foreground uppercase mb-1">Live Status</p>
+                    <p className="text-sm font-bold text-white flex items-center gap-2">
+                        System Online <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </p>
                 </div>
             </div>
 

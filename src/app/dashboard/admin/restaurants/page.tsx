@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Building2, MoreHorizontal, Search, MapPin, ExternalLink } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { AddRestaurantModal } from "@/components/dashboard/AddRestaurantModal";
+import { RestaurantActions } from "@/components/dashboard/RestaurantActions";
+
 export default async function AdminRestaurantsPage() {
     const supabase = await createClient();
 
@@ -13,12 +16,13 @@ export default async function AdminRestaurantsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/login");
     const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (adminProfile?.role !== 'admin') redirect("/dashboard/owner");
+
+    // Allow if role is admin OR if it is the hardcoded super-admin email
+    if (adminProfile?.role !== 'admin' && user.email !== 'admin@restauplus.com') {
+        redirect("/dashboard/owner");
+    }
 
     // Fetch Restaurants with Owner Info
-    // Note: We need to join profiles where role is owner, but that's a reverse lookup.
-    // Easier to fetch restaurants and then maybe fetch owner? or just simplistic view for now.
-    // Let's rely on the policy allowing us to see everything.
     const { data: restaurants } = await supabase
         .from('restaurants')
         .select(`
@@ -36,10 +40,7 @@ export default async function AdminRestaurantsPage() {
                     </h1>
                     <p className="text-muted-foreground">Manage all {restaurants?.length || 0} restaurant entities.</p>
                 </div>
-                <Button className="bg-primary hover:bg-primary/90 text-white">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Add Restaurant
-                </Button>
+                <AddRestaurantModal />
             </div>
 
             <Card className="border-white/5 bg-black/40 backdrop-blur-xl">
@@ -105,14 +106,7 @@ export default async function AdminRestaurantsPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-white/10 text-muted-foreground hover:text-white">
-                                                <ExternalLink className="h-4 w-4" />
-                                            </Button>
-                                            <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-white/10 text-muted-foreground hover:text-white">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                        <RestaurantActions restaurantId={rest.id} slug={rest.slug} />
                                     </TableCell>
                                 </TableRow>
                             );

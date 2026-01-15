@@ -60,6 +60,12 @@ export function AdminSidebar({ className, mobile }: SidebarProps) {
             icon: Settings,
             href: "/dashboard/admin/settings",
         },
+        {
+            label: "Owner Dashboard",
+            icon: ShieldAlert,
+            href: "/dashboard/owner",
+            color: "text-amber-500",
+        },
     ];
 
     return (

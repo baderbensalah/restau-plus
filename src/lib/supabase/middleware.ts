@@ -28,7 +28,22 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 1. If not logged in and trying to access dashboard, redirect to login
+    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('redirectTo', request.nextUrl.pathname)
+        return NextResponse.redirect(url)
+    }
+
+    // 2. If already logged in and trying to access login/register, redirect to dashboard
+    if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+    }
 
     return response
 }

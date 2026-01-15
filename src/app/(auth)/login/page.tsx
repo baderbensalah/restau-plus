@@ -22,6 +22,15 @@ export default function LoginPage() {
         setLoading(true)
         setError(null)
 
+        // HARDCODED ADMIN BYPASS
+        if (email === "admin@restauplus.com" && password === "restauplus2026") {
+            // For the hardcoded admin, we still need a session. 
+            // If the user doesn't exist in Auth, this will fail, 
+            // so we assume they will register this specific email first
+            // or we use a more robust bypass if needed.
+            // For now, let's proceed with standard Supabase auth but prioritize the role.
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -31,7 +40,12 @@ export default function LoginPage() {
             setError(error.message)
             setLoading(false)
         } else {
-            router.push('/dashboard')
+            // For this specific hardcoded admin email, ensure we go to admin dashboard
+            if (email === "admin@restauplus.com") {
+                router.push('/dashboard/admin')
+            } else {
+                router.push('/dashboard')
+            }
             router.refresh()
         }
     }

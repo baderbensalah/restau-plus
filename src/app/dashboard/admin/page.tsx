@@ -15,7 +15,11 @@ export default async function AdminDashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) redirect("/login");
     const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (adminProfile?.role !== 'admin') redirect("/dashboard/owner");
+
+    // Allow if role is admin OR if it is the hardcoded super-admin email
+    if (adminProfile?.role !== 'admin' && user.email !== 'admin@restauplus.com') {
+        redirect("/dashboard/owner");
+    }
 
     // 1. Fetch Aggregated Stats (RPC)
     const { data: stats } = await supabase.rpc('get_admin_stats');

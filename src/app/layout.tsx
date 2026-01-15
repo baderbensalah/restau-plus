@@ -12,17 +12,20 @@ export const metadata: Metadata = {
   description: "Modern Restaurant Ordering System",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={cn(inter.className, "antialiased bg-black")} suppressHydrationWarning>
         <AuthProvider>
           {/* <SmoothScroll> */}
           {children}
+          <Toaster position="top-right" richColors theme="dark" />
           {/* </SmoothScroll> */}
         </AuthProvider>
       </body>
