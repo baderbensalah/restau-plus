@@ -1,196 +1,78 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Users, Mail, Loader2, Shield } from "lucide-react";
+import { Plus, Copy, Check, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 export function InviteUserModal() {
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [role, setRole] = useState("owner");
-    const [restaurantId, setRestaurantId] = useState<string>("");
-    const [restaurants, setRestaurants] = useState<any[]>([]);
+    const [step, setStep] = useState<'invite' | 'success'>('invite');
+    const [inviteLink, setInviteLink] = useState("");
+    const [copied, setCopied] = useState(false);
 
-    const supabase = createClient();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (open) {
-            fetchRestaurants();
-        }
-    }, [open]);
-
-    async function fetchRestaurants() {
-        const { data } = await supabase.from("restaurants").select("id, name").order("name");
-        if (data) setRestaurants(data);
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-
-        try {
-            // Note: In a real app, this would use supabase.auth.admin.inviteUserByEmail
-            // For now, we'll create a profile and assume the user will sign up with this email
-            // or we could use an API route if we had the service role key.
-
-            const { error } = await supabase
-                .from("profiles")
-                .insert([{
-                    email,
-                    full_name: fullName,
-                    role,
-                    restaurant_id: restaurantId || null,
-                    status: 'approved' // Admin-created users are pre-approved
-                }]);
-
-            if (error) {
-                if (error.code === '23505') {
-                    throw new Error("A user with this email already exists.");
-                }
-                throw error;
-            }
-
-            toast.success("User invited/created successfully");
-            setOpen(false);
-            resetForm();
-            router.refresh();
-        } catch (error: any) {
-            toast.error(error.message || "Failed to invite user");
-        } finally {
-            setLoading(false);
-        }
+        // Mock invitation logic for now
+        // In a real app, this would call a server action to send an email
+        const mockLink = `https://restauplus.com/join?token=${Math.random().toString(36).substring(7)}`;
+        setInviteLink(mockLink);
+        setStep('success');
+        toast.success("Invitation generated!");
     };
 
-    const resetForm = () => {
-        setEmail("");
-        setFullName("");
-        setRole("owner");
-        setRestaurantId("");
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(inviteLink);
+        setCopied(true);
+        toast.success("Link copied to clipboard");
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
-                    <Users className="w-4 h-4 mr-2" />
+                <Button className="bg-white text-black hover:bg-zinc-200 border-0 font-bold shadow-lg shadow-white/10 transition-all hover:scale-105 active:scale-95">
+                    <Plus className="w-4 h-4 mr-2" />
                     Invite User
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-white/10 text-white">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[425px]">
                 <DialogHeader>
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
-                        <Mail className="w-6 h-6 text-primary" />
-                    </div>
-                    <DialogTitle className="text-2xl font-bold">Invite User</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                        Invite a new restaurant owner or platform administrator.
+                    <DialogTitle className="flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-blue-500" />
+                        Invite New User
+                    </DialogTitle>
+                    <DialogDescription className="text-zinc-500">
+                        Send an invitation to join the platform.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                            Email Address
-                        </Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="user@example.com"
-                            className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                            Full Name
-                        </Label>
-                        <Input
-                            id="fullName"
-                            placeholder="John Doe"
-                            className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                                Role
-                            </Label>
-                            <Select value={role} onValueChange={setRole}>
-                                <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50">
-                                    <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    <SelectItem value="owner">Owner</SelectItem>
-                                    <SelectItem value="manager">Manager</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+                {step === 'invite' ? (
+                    <form onSubmit={handleInvite} className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="email" className="text-zinc-400">Email Address</Label>
+                            <Input id="email" type="email" placeholder="colleague@example.com" required className="bg-zinc-900 border-zinc-800 focus:border-blue-500/50" />
                         </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                                Restaurant
-                            </Label>
-                            <Select value={restaurantId} onValueChange={setRestaurantId}>
-                                <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50">
-                                    <SelectValue placeholder="Select restaurant" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    <SelectItem value="none">None (Platform Admin)</SelectItem>
-                                    {restaurants.map((res) => (
-                                        <SelectItem key={res.id} value={res.id}>
-                                            {res.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <DialogFooter>
+                            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold w-full">
+                                Generate Invite Link
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                ) : (
+                    <div className="py-4 space-y-4">
+                        <div className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 break-all text-xs font-mono text-zinc-400">
+                            {inviteLink}
                         </div>
+                        <Button onClick={copyToClipboard} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                            {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                            {copied ? "Copied!" : "Copy Link"}
+                        </Button>
                     </div>
-                    <DialogFooter className="pt-6">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setOpen(false)}
-                            className="text-muted-foreground hover:text-white"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-primary hover:bg-primary/90 text-white min-w-[120px]"
-                        >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send Invitation"}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                )}
             </DialogContent>
         </Dialog>
     );

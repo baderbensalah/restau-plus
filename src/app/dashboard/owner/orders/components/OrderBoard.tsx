@@ -34,7 +34,7 @@ export function OrderBoard({ initialOrders, restaurantId }: { initialOrders: any
     const supabase = createClient();
 
     const columns: { status: OrderStatus; label: string; icon: any; color: string; glow: string }[] = [
-        { status: 'pending', label: 'New Orders', icon: BellRing, color: 'text-blue-500', glow: 'shadow-blue-500/20' },
+        { status: 'pending', label: 'New Orders', icon: BellRing, color: 'text-teal-500', glow: 'shadow-teal-500/20' },
         { status: 'preparing', label: 'Preparing', icon: ChefHat, color: 'text-orange-500', glow: 'shadow-orange-500/20' },
         { status: 'ready', label: 'Ready to Serve', icon: CheckCircle2, color: 'text-green-500', glow: 'shadow-green-500/20' },
     ];
@@ -99,35 +99,29 @@ export function OrderBoard({ initialOrders, restaurantId }: { initialOrders: any
     };
 
     return (
-        <div className="flex-1 h-full overflow-hidden flex flex-col p-4">
+        <div className="flex-1 h-full overflow-hidden flex flex-col pt-2">
             <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
-                <div className="flex gap-8 h-full min-w-[1100px] px-2">
+                <div className="flex gap-6 h-full min-w-[1000px] px-1">
                     {columns.map(col => (
-                        <div key={col.status} className="flex-1 min-w-[340px] flex flex-col gap-6">
+                        <div key={col.status} className="flex-1 min-w-[320px] flex flex-col gap-4">
+                            {/* Column Header */}
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className={cn(
-                                    "flex items-center gap-4 p-5 rounded-2xl glass-card sticky top-0 z-10",
-                                    "border-white/10 shadow-xl",
-                                    col.glow
-                                )}
+                                className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border-none shadow-sm sticky top-0 z-10"
                             >
-                                <div className={cn("p-3 rounded-xl bg-background/50 backdrop-blur-md shadow-inner", col.color)}>
-                                    <col.icon className="w-6 h-6" />
+                                <div className="flex items-center gap-3">
+                                    <div className={cn("p-2 rounded-lg bg-zinc-800 text-white", col.color)}>
+                                        <col.icon className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="font-semibold text-base text-zinc-100">{col.label}</h3>
                                 </div>
-                                <div>
-                                    <h3 className="font-black text-xl tracking-tight text-white italic">{col.label}</h3>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Live Stream</p>
-                                </div>
-                                <div className="ml-auto">
-                                    <Badge variant="secondary" className="text-lg font-black px-3 bg-white/5 border-white/10 text-white rounded-lg">
-                                        {orders.filter(o => o.status === col.status).length}
-                                    </Badge>
-                                </div>
+                                <Badge variant="secondary" className="bg-zinc-950 text-white hover:bg-zinc-950">
+                                    {orders.filter(o => o.status === col.status).length}
+                                </Badge>
                             </motion.div>
 
-                            <div className="space-y-6 px-1 pb-10 overflow-y-auto custom-scrollbar h-[calc(100vh-280px)]">
+                            <div className="space-y-4 px-1 pb-10 overflow-y-auto custom-scrollbar h-[calc(100vh-200px)]">
                                 <AnimatePresence mode="popLayout">
                                     {orders
                                         .filter(o => o.status === col.status)
@@ -138,13 +132,13 @@ export function OrderBoard({ initialOrders, restaurantId }: { initialOrders: any
                                 {orders.filter(o => o.status === col.status).length === 0 && (
                                     <motion.div
                                         initial={{ opacity: 0 }}
-                                        animate={{ opacity: 0.3 }}
-                                        className="flex flex-col items-center justify-center py-20 text-muted-foreground italic"
+                                        animate={{ opacity: 0.5 }}
+                                        className="flex flex-col items-center justify-center py-12 text-zinc-500"
                                     >
-                                        <div className="p-6 rounded-full bg-white/5 mb-4">
-                                            <UtensilsCrossed className="w-12 h-12" />
+                                        <div className="p-4 rounded-full bg-zinc-900 mb-3">
+                                            <UtensilsCrossed className="w-8 h-8 opacity-50" />
                                         </div>
-                                        <p className="font-black tracking-tighter text-xl">SILENCE IN THE KITCHEN</p>
+                                        <p className="text-sm font-medium">No orders</p>
                                     </motion.div>
                                 )}
                             </div>
@@ -168,117 +162,94 @@ function OrderCard({ order, onUpdate }: { order: Order; onUpdate: (id: string, s
     }, [order.created_at]);
 
     const isLate = elapsedMinutes > 15;
-    const tableDisplay = order.table_number || (order.tables?.number ? `No. ${order.tables.number}` : "Express");
+    const tableDisplay = order.table_number || (order.tables?.number ? `Table ${order.tables.number}` : "Express");
 
     return (
         <motion.div
             layoutId={order.id}
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-            whileHover={{ y: -4 }}
+            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
             className="group"
         >
-            <Card className={cn(
-                "relative overflow-hidden transition-all duration-500 border-white/5",
-                "bg-card/30 backdrop-blur-xl group-hover:bg-card/50 group-hover:border-primary/30",
-                "rounded-[2rem] shadow-2xl",
-                order.status === 'pending' ? "shadow-primary/5" : ""
-            )}>
-                {/* Visual Status Bar */}
-                <div className={cn(
-                    "absolute left-0 top-0 bottom-0 w-1.5 transition-colors duration-500",
-                    order.status === 'pending' ? "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]" :
-                        order.status === 'preparing' ? "bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.5)]" :
-                            "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"
-                )} />
-
-                <CardHeader className="p-6 pb-4 flex flex-row justify-between items-start space-y-0 relative z-10">
-                    <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Badge className="bg-primary hover:bg-primary text-white font-black px-4 py-1 rounded-full shadow-lg shadow-primary/20 flex items-center gap-1.5">
-                                <Hash className="w-3.5 h-3.5" />
-                                {tableDisplay}
-                            </Badge>
-                            {order.customer_name && (
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/80">
-                                    <User className="w-3.5 h-3.5 text-primary" />
-                                    <span className="text-sm font-black italic truncate max-w-[120px]">
-                                        {order.customer_name}
-                                    </span>
-                                </div>
-                            )}
+            <Card className="border-none bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="p-4 flex flex-row justify-between items-start space-y-0">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-teal-400">#{order.id.slice(0, 4)}</span>
+                            <span className="text-xs text-zinc-500">•</span>
+                            <span className="text-sm font-semibold text-white">{tableDisplay}</span>
                         </div>
+                        {order.customer_name && (
+                            <p className="text-sm text-zinc-300 font-medium">
+                                {order.customer_name}
+                            </p>
+                        )}
                         <div className={cn(
-                            "flex items-center gap-2 text-xs font-black tracking-widest uppercase",
-                            isLate ? "text-red-400 animate-pulse" : "text-muted-foreground/60"
+                            "flex items-center gap-1.5 text-xs font-medium pt-1",
+                            isLate ? "text-red-400" : "text-zinc-500"
                         )}>
-                            <Clock className="w-4 h-4" />
-                            {elapsedMinutes}m elapsed
+                            <Clock className="w-3.5 h-3.5" />
+                            {elapsedMinutes} min ago
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 relative">
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2">
                         {order.status === 'pending' && (
                             <Button
+                                size="sm"
                                 onClick={() => onUpdate(order.id, 'preparing')}
-                                className="bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl shadow-lg shadow-blue-500/30 group/btn"
+                                className="h-8 bg-teal-600 hover:bg-teal-500 text-white font-medium rounded-lg shadow-sm text-xs"
                             >
-                                <ChefHat className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-                                Cook
+                                Start Cook
                             </Button>
                         )}
                         {order.status === 'preparing' && (
                             <Button
+                                size="sm"
                                 onClick={() => onUpdate(order.id, 'ready')}
-                                className="bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl shadow-lg shadow-orange-500/30 group/btn"
+                                className="h-8 bg-orange-600 hover:bg-orange-500 text-white font-medium rounded-lg shadow-sm text-xs"
                             >
-                                <BellRing className="w-4 h-4 mr-2 group-hover:animate-bounce" />
-                                Ready
+                                Mark Ready
                             </Button>
                         )}
                         {order.status === 'ready' && (
                             <Button
+                                size="sm"
                                 onClick={() => onUpdate(order.id, 'served')}
-                                className="bg-green-600 hover:bg-green-500 text-white font-black rounded-2xl shadow-lg shadow-green-500/30 group/btn"
+                                className="h-8 bg-green-600 hover:bg-green-500 text-white font-medium rounded-lg shadow-sm text-xs"
                             >
-                                <CheckCircle2 className="w-4 h-4 mr-2 group-hover:scale-110" />
-                                Serve
+                                Complete
                             </Button>
                         )}
                     </div>
                 </CardHeader>
 
-                <CardContent className="p-6 pt-0 space-y-4 relative z-10">
-                    <div className="space-y-3">
+                <CardContent className="p-4 pt-0 space-y-3">
+                    <div className="h-px bg-zinc-800 w-full" />
+                    <div className="space-y-2">
                         {order.order_items.map(item => (
-                            <div key={item.id} className="group/item flex justify-between items-center p-3 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] hover:border-white/10 transition-all">
-                                <span className="font-bold text-white flex items-center gap-3">
-                                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-primary text-white text-xs font-black shadow-lg shadow-primary/20 transition-transform group-hover/item:scale-110">
-                                        {item.quantity}
-                                    </div>
-                                    <span className="text-sm tracking-tight">{item.menu_items?.name || 'Unknown Treasure'}</span>
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                <span className="text-zinc-300">
+                                    <span className="font-semibold text-white mr-2">{item.quantity}x</span>
+                                    {item.menu_items?.name || 'Unknown Item'}
                                 </span>
                             </div>
                         ))}
                     </div>
 
                     {order.order_items.some(i => i.notes) && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20"
-                        >
-                            <p className="text-xs text-amber-500 font-black italic flex items-start gap-2">
-                                <span className="text-lg leading-none">★</span>
-                                {order.order_items.map(i => i.notes).filter(Boolean).join(", ")}
-                            </p>
-                        </motion.div>
+                        <div className="pt-2">
+                            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                <p className="text-xs text-amber-400 font-medium flex items-start gap-2">
+                                    <span className="mt-0.5">⚠️</span>
+                                    {order.order_items.map(i => i.notes).filter(Boolean).join(", ")}
+                                </p>
+                            </div>
+                        </div>
                     )}
                 </CardContent>
-
-                {/* Ambient Hover Glow */}
-                <div className="absolute inset-0 bg-primary/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </Card>
         </motion.div>
     );

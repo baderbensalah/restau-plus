@@ -32,22 +32,15 @@ export default async function OrdersPage() {
         .order('created_at', { ascending: true });
 
     return (
-        <div className="p-8 space-y-8 h-full flex flex-col bg-gradient-to-br from-background via-[#050505] to-background">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-primary/10 pb-6 whitespace-nowrap">
+        <div className="space-y-6 pt-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="h-3 w-3 rounded-full bg-primary animate-pulse shadow-[0_0_8px_var(--primary)]" />
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/60">Real-time Operations</span>
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-white italic drop-shadow-2xl">
-                        KITCHEN <span className="text-primary glow-text">COMMAND</span>
-                    </h1>
+                    <h2 className="text-3xl font-bold tracking-tight text-white mb-1">Kitchen View</h2>
+                    <p className="text-sm text-slate-400">Manage real-time orders and preparation status.</p>
                 </div>
-                <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
-                    <p className="text-xs font-black text-muted-foreground uppercase mb-1">Live Status</p>
-                    <p className="text-sm font-bold text-white flex items-center gap-2">
-                        System Online <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    </p>
+                <div className="flex items-center gap-2 bg-[#1e293b] border border-[#2e3b52] px-4 py-2 rounded-xl text-sm font-medium text-teal-400 shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                    <span>Live Updates Active</span>
                 </div>
             </div>
 

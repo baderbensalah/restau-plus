@@ -1,78 +1,108 @@
 "use client";
 
-import { MoreHorizontal, Trash2, Edit3, ExternalLink, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+    MoreHorizontal,
+    Power,
+    ExternalLink,
+    Trash2,
+    AlertTriangle,
+    Edit3,
+    Loader2
+} from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
+import { toggleRestaurantStatus } from "@/app/actions/admin-restaurants";
+import { useRouter } from "next/navigation";
 
-export function RestaurantActions({ restaurantId, slug }: { restaurantId: string; slug: string }) {
+interface RestaurantActionsProps {
+    restaurant: any;
+}
+
+export function RestaurantActions({ restaurant }: RestaurantActionsProps) {
     const [loading, setLoading] = useState(false);
-    const supabase = createClient();
     const router = useRouter();
 
-    const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this restaurant? This will remove all associated data, including menus and orders.")) return;
-
+    const handleToggleStatus = async () => {
         setLoading(true);
         try {
-            const { error } = await supabase
-                .from("restaurants")
-                .delete()
-                .eq("id", restaurantId);
-
-            if (error) throw error;
-            toast.success("Restaurant deleted successfully");
+            await toggleRestaurantStatus(restaurant.id, restaurant.is_active);
+            toast.success(restaurant.is_active ? "Restaurant suspended" : "Restaurant activated");
+            // Optimistic update happens via revalidatePath on server, but router.refresh ensures UI sync
             router.refresh();
-        } catch (error: any) {
-            toast.error(error.message || "Failed to delete restaurant");
+        } catch (error) {
+            toast.error("Failed to update status");
         } finally {
             setLoading(false);
         }
     };
 
+    const handleDelete = async () => {
+        toast.error("Delete is disabled for safety reasons.");
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-white/10 text-muted-foreground hover:text-white">
+                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-white/10 text-muted-foreground hover:text-white">
+                    <span className="sr-only">Open menu</span>
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-white/10 text-white shadow-2xl">
-                <DropdownMenuLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-4 py-3">Restaurant Options</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/5" />
-
+            <DropdownMenuContent align="end" className="w-56 bg-zinc-950 border-zinc-800 text-zinc-300 shadow-2xl">
+                <DropdownMenuLabel className="text-xs uppercase tracking-widest text-zinc-500 font-mono">
+                    Actions
+                </DropdownMenuLabel>
                 <DropdownMenuItem
-                    onClick={() => window.open(`/${slug}`, '_blank')}
-                    className="gap-3 py-3 px-4 focus:bg-white/5 cursor-pointer group"
+                    onClick={() => window.open(`/${restaurant.slug}`, '_blank')}
+                    className="hover:bg-zinc-900 hover:text-white cursor-pointer"
                 >
-                    <ExternalLink className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                    <span>View Public Menu</span>
+                    <ExternalLink className="mr-2 h-4 w-4 text-sky-500" />
+                    Visit Store
                 </DropdownMenuItem>
-
-                <DropdownMenuItem className="gap-3 py-3 px-4 focus:bg-white/5 cursor-pointer">
-                    <Edit3 className="w-4 h-4 text-blue-400" />
-                    <span>Edit Details</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="bg-white/5" />
 
                 <DropdownMenuItem
-                    onClick={handleDelete}
+                    className="hover:bg-zinc-900 hover:text-white cursor-pointer"
+                >
+                    <Edit3 className="mr-2 h-4 w-4 text-blue-500" />
+                    Edit Details
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-zinc-800" />
+
+                <DropdownMenuItem
+                    onClick={handleToggleStatus}
                     disabled={loading}
-                    className="gap-3 py-3 px-4 focus:bg-rose-500/10 cursor-pointer group text-rose-400"
+                    className="hover:bg-zinc-900 cursor-pointer"
                 >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />}
-                    <span>Delete Entity</span>
+                    {restaurant.is_active ? (
+                        <>
+                            <Power className="mr-2 h-4 w-4 text-amber-500" />
+                            <span className="text-amber-500 group-hover:text-amber-400">Suspend Store</span>
+                        </>
+                    ) : (
+                        <>
+                            <Power className="mr-2 h-4 w-4 text-emerald-500" />
+                            <span className="text-emerald-500 group-hover:text-emerald-400">Activate Store</span>
+                        </>
+                    )}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-zinc-800" />
+                <DropdownMenuItem
+                    className="hover:bg-red-950/20 text-red-500 hover:text-red-400 cursor-pointer"
+                    onClick={handleDelete}
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Permanently
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

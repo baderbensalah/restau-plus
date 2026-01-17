@@ -1,185 +1,96 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { UserCog, Loader2, Save } from "lucide-react";
-import { useAdminActions } from "@/lib/hooks/use-admin-actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { updateUserProfile } from "@/app/actions/admin";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { Loader2, UserCog } from "lucide-react";
 
 interface EditUserModalProps {
-    user: {
-        id: string;
-        email: string;
-        full_name: string | null;
-        role: string;
-        status: string;
-        restaurant_id: string | null;
-    };
+    user: any;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
 export function EditUserModal({ user, open, onOpenChange }: EditUserModalProps) {
     const [loading, setLoading] = useState(false);
-    const [fullName, setFullName] = useState(user.full_name || "");
-    const [role, setRole] = useState(user.role);
-    const [status, setStatus] = useState(user.status);
-    const [restaurantId, setRestaurantId] = useState<string>(user.restaurant_id || "none");
-    const [restaurants, setRestaurants] = useState<any[]>([]);
+    const router = useRouter();
+    const [formData, setFormData] = useState({
+        full_name: user?.full_name || "",
+        role: user?.role || "user",
+    });
 
-    const { updateProfile } = useAdminActions();
-    const supabase = createClient();
-
-    useEffect(() => {
-        if (open) {
-            fetchRestaurants();
-        }
-    }, [open]);
-
-    async function fetchRestaurants() {
-        const { data } = await supabase.from("restaurants").select("id, name").order("name");
-        if (data) setRestaurants(data);
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSave = async () => {
         setLoading(true);
-
-        const updates = {
-            full_name: fullName,
-            role,
-            status,
-            restaurant_id: restaurantId === "none" ? null : restaurantId
-        };
-
-        const result = await updateProfile(user.id, updates);
-
-        if (result.success) {
+        try {
+            await updateUserProfile(user.id, formData);
+            toast.success("Profile updated successfully");
             onOpenChange(false);
+            router.refresh();
+        } catch (error) {
+            toast.error("Failed to update profile");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[450px] bg-zinc-950 border-white/10 text-white">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[425px]">
                 <DialogHeader>
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
-                        <UserCog className="w-6 h-6 text-primary" />
-                    </div>
-                    <DialogTitle className="text-2xl font-bold">Edit User Profile</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
-                        Modify permissions, roles, and restaurant access for {user.email}.
+                    <DialogTitle className="flex items-center gap-2">
+                        <UserCog className="w-5 h-5 text-purple-500" />
+                        Edit User Profile
+                    </DialogTitle>
+                    <DialogDescription className="text-zinc-500">
+                        Make changes to the user's details and permissions.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-fullName" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                            Full Name
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right text-zinc-400">
+                            Name
                         </Label>
                         <Input
-                            id="edit-fullName"
-                            placeholder="John Doe"
-                            className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                            required
+                            id="name"
+                            value={formData.full_name}
+                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                            className="col-span-3 bg-zinc-900 border-zinc-800 focus:border-purple-500/50"
                         />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                                Role
-                            </Label>
-                            <Select value={role} onValueChange={setRole}>
-                                <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50">
-                                    <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    <SelectItem value="owner">Owner</SelectItem>
-                                    <SelectItem value="manager">Manager</SelectItem>
-                                    <SelectItem value="staff">Staff</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                                Access Status
-                            </Label>
-                            <Select value={status} onValueChange={setStatus}>
-                                <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                                    <SelectItem value="approved">Approved</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="rejected">Rejected</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                            Associated Restaurant
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="role" className="text-right text-zinc-400">
+                            Role
                         </Label>
-                        <Select value={restaurantId} onValueChange={setRestaurantId}>
-                            <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 focus:border-primary/50 flex items-center gap-2">
-                                <SelectValue placeholder="Select restaurant" />
+                        <Select
+                            value={formData.role}
+                            onValueChange={(val) => setFormData({ ...formData, role: val })}
+                        >
+                            <SelectTrigger className="col-span-3 bg-zinc-900 border-zinc-800">
+                                <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
-                            <SelectContent className="bg-zinc-900 border-white/10 text-white max-h-[200px]">
-                                <SelectItem value="none">No Restaurant Linked</SelectItem>
-                                {restaurants.map((res) => (
-                                    <SelectItem key={res.id} value={res.id}>
-                                        {res.name}
-                                    </SelectItem>
-                                ))}
+                            <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="owner">Owner</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <DialogFooter className="pt-6">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => onOpenChange(false)}
-                            className="text-muted-foreground hover:text-white"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-primary hover:bg-primary/90 text-white min-w-[140px] shadow-lg shadow-primary/20"
-                        >
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                <>
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save Changes
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                </div>
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-zinc-400 hover:text-white hover:bg-white/10">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSave} disabled={loading} className="bg-purple-600 hover:bg-purple-700 text-white font-bold">
+                        {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Save Changes
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

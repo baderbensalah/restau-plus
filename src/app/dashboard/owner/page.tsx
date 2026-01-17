@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardUI } from "./DashboardUI";
 import { redirect } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
     const supabase = await createClient();
 
@@ -19,7 +21,22 @@ export default async function DashboardPage() {
         .single();
 
     if (!profile?.restaurant_id) {
-        return <div>No Restaurant Linked. Please contact support.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+                <div className="p-4 rounded-full bg-yellow-500/10 text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-store-off"><path d="M2.97 12.92A2 2 0 0 0 2 15v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6a2 2 0 0 0-.97-2.08" /><path d="m2 9 10-5 4.36 2.18a5 5 0 0 1 2.37 3.56l.27 1.26" /><path d="m22 9-5.74 3.83" /><path d="M12 21V9" /><path d="m2 22 20-20" /></svg>
+                </div>
+                <h2 className="text-xl font-bold text-white">No Restaurant Linked</h2>
+                <p className="text-muted-foreground max-w-md">
+                    Your account is not linked to any restaurant. If you are an Admin, please use the Admin Console.
+                </p>
+                <div className="flex gap-4">
+                    <a href="/dashboard/admin" className="text-sm font-medium text-primary hover:underline">
+                        Go to Admin Console
+                    </a>
+                </div>
+            </div>
+        );
     }
 
     if (profile.role !== 'owner' && profile.role !== 'manager') {

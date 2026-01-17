@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -11,7 +10,7 @@ interface StatCardProps {
     trendUp?: boolean;
     description?: string;
     className?: string;
-    gradient?: string;
+    variant?: "default" | "primary" | "secondary";
 }
 
 export function StatCard({
@@ -22,37 +21,80 @@ export function StatCard({
     trendUp,
     description,
     className,
-    gradient = "from-blue-500/20 to-purple-500/20"
+    variant = "default"
 }: StatCardProps) {
+    const isPrimary = variant === "primary";
+    const isEmpty = value === 0 || value === "0" || value === "$0";
+
     return (
-        <Card className={cn("overflow-hidden border-muted/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 group", className)}>
-            <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br", gradient)} />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                    {title}
-                </CardTitle>
-                <div className={cn("p-2 rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300")}>
-                    <Icon className="h-4 w-4" />
-                </div>
-            </CardHeader>
-            <CardContent className="relative z-10 pt-2">
-                <div className="text-4xl font-black tracking-tighter text-white text-glow-primary">
-                    {value}
-                </div>
-                {(trend || description) && (
-                    <div className="flex items-center gap-2 mt-1">
-                        {trend && (
-                            <span className={cn("text-xs font-semibold px-1.5 py-0.5 rounded-full flex items-center",
-                                trendUp ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
-                            )}>
-                                {trendUp ? "↑" : "↓"} {trend}
-                            </span>
-                        )}
-                        {description && (
-                            <p className="text-xs text-muted-foreground">{description}</p>
-                        )}
+        <Card className={cn(
+            "relative overflow-hidden transition-all duration-300 border-none shadow-lg",
+            isPrimary
+                ? "bg-gradient-to-br from-teal-500 to-teal-600 text-white"
+                : "bg-zinc-900 text-white hover:bg-zinc-800", // Flat dark for others
+            className
+        )}>
+            {/* Background Decorator for Primary Only */}
+            {isPrimary && (
+                <>
+                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/20 blur-xl pointer-events-none" />
+                    <div className="absolute right-10 bottom-10 w-32 h-32 rounded-full bg-teal-400/30 blur-2xl pointer-events-none" />
+                </>
+            )}
+
+            <CardContent className="p-6 relative z-10 flex flex-col justify-between h-full min-h-[160px]">
+                <div className="flex justify-between items-start mb-4">
+                    <div className={cn(
+                        "p-2.5 rounded-lg flex items-center justify-center transition-transform duration-300",
+                        isPrimary ? "bg-white/20 text-white" : "bg-zinc-800 text-teal-400"
+                    )}>
+                        <Icon className="h-5 w-5" />
                     </div>
-                )}
+                </div>
+
+                <div className="space-y-1">
+                    <div className={cn(
+                        "font-bold tracking-tight transition-opacity",
+                        isPrimary ? "text-4xl" : "text-3xl", // Larger font for Revenue
+                        isEmpty && !isPrimary ? "opacity-50" : "opacity-100"
+                    )}>
+                        {value}
+                    </div>
+                    <div className={cn(
+                        "text-sm font-medium",
+                        isPrimary ? "text-teal-50" : "text-zinc-400"
+                    )}>
+                        {title}
+                    </div>
+                </div>
+
+                {/* Empty State or Trend */}
+                <div className="mt-4 pt-4 border-t border-white/5 h-8 flex items-center">
+                    {isEmpty ? (
+                        <span className="text-xs text-zinc-500 font-medium italic">
+                            No data recorded yet
+                        </span>
+                    ) : (trend || description) ? (
+                        <div className="flex items-center gap-2">
+                            {trend && (
+                                <div className="flex items-center gap-1.5">
+                                    <span className={cn(
+                                        "flex items-center justify-center w-4 h-4 rounded-full text-[10px]",
+                                        trendUp
+                                            ? "bg-emerald-500/20 text-emerald-400" // Always green for up
+                                            : "bg-red-500/20 text-red-400"
+                                    )}>
+                                        {trendUp ? "↗" : "↘"}
+                                    </span>
+                                    <span className={cn(
+                                        "text-xs font-medium",
+                                        isPrimary ? "text-teal-50" : "text-zinc-400"
+                                    )}>{trend}</span>
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+                </div>
             </CardContent>
         </Card>
     );
