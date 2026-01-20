@@ -69,7 +69,7 @@ export default async function DashboardPage() {
             .gte('created_at', new Date().toISOString().split('T')[0]), // Today
     ]);
 
-    // 3. Calculate Today's Revenue
+    // 3. Calculate Daily Revenue (Today)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const { data: todayRevenueOrders } = await supabase
@@ -79,7 +79,16 @@ export default async function DashboardPage() {
         .eq('status', 'paid')
         .gte('created_at', today.toISOString());
 
-    const totalRevenue = todayRevenueOrders?.reduce((acc, order) => acc + (Number(order.total_amount) || 0), 0) || 0;
+    const dailyRevenue = todayRevenueOrders?.reduce((acc, order) => acc + (Number(order.total_amount) || 0), 0) || 0;
+
+    // 3b. Calculate Total Revenue (All Time)
+    const { data: allTimeRevenueOrders } = await supabase
+        .from('orders')
+        .select('total_amount')
+        .eq('restaurant_id', restaurantId)
+        .eq('status', 'paid');
+
+    const totalRevenue = allTimeRevenueOrders?.reduce((acc, order) => acc + (Number(order.total_amount) || 0), 0) || 0;
 
     // 4. Fetch Weekly Orders for Revenue Chart
     const sevenDaysAgo = new Date();
@@ -163,7 +172,8 @@ export default async function DashboardPage() {
 
     const stats = {
         currency: currencySymbol,
-        totalRevenue,
+        totalRevenue,   // All time
+        dailyRevenue,   // Today Only
         weeklyTotalRevenue,
         activeOrders: activeOrdersCount || 0,
         activeTables: activeTablesCount || 0,

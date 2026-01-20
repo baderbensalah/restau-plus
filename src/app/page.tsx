@@ -1,8 +1,7 @@
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
-import { Hero } from "@/components/landing/Hero";
 import { Navbar } from "@/components/layout/Navbar";
-import { GlobalHero } from "@/components/landing/GlobalHero";
+import { DashboardDemo } from "@/components/landing/DashboardDemo";
 import { TrustedBy } from "@/components/landing/TrustedBy";
 import { ShootingStars } from "@/components/ui/shooting-stars";
 import { StarsBackground } from "@/components/ui/stars-background";
@@ -18,8 +17,7 @@ export default function Home() {
 
       <div className="relative z-10">
         <Navbar />
-        <Hero />
-        <GlobalHero />
+        <DashboardDemo />
         <Features />
         <Footer />
       </div>

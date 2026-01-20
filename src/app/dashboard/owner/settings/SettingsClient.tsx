@@ -239,6 +239,8 @@ export function SettingsClient({ restaurant }: { restaurant: any }) {
         slug: restaurant?.slug || "",
         primary_color: restaurant?.primary_color || "#000000",
         secondary_color: restaurant?.secondary_color || "#ffffff",
+        background_color: restaurant?.background_color || "#ffffff",
+        foreground_color: restaurant?.foreground_color || "#09090b",
         logo_url: restaurant?.logo_url || "",
         banner_url: restaurant?.banner_url || "",
         phone: restaurant?.phone || "",
@@ -269,6 +271,8 @@ export function SettingsClient({ restaurant }: { restaurant: any }) {
                 slug: cleanSlug,
                 primary_color: formData.primary_color,
                 secondary_color: formData.secondary_color,
+                background_color: formData.background_color,
+                foreground_color: formData.foreground_color,
                 logo_url: formData.logo_url,
                 banner_url: formData.banner_url,
                 phone: formData.phone,
@@ -444,9 +448,19 @@ export function SettingsClient({ restaurant }: { restaurant: any }) {
                                             onChange={(val) => setFormData(prev => ({ ...prev, primary_color: val }))}
                                         />
                                         <ProColorPicker
-                                            label="Background Accent"
+                                            label="Secondary Accent"
                                             value={formData.secondary_color}
                                             onChange={(val) => setFormData(prev => ({ ...prev, secondary_color: val }))}
+                                        />
+                                        <ProColorPicker
+                                            label="Page Background"
+                                            value={formData.background_color || '#ffffff'}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, background_color: val }))}
+                                        />
+                                        <ProColorPicker
+                                            label="Text Color"
+                                            value={formData.foreground_color || '#09090b'}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, foreground_color: val }))}
                                         />
                                     </CardContent>
                                 </Card>

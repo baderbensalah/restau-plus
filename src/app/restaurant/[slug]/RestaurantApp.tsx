@@ -82,13 +82,18 @@ export function RestaurantApp({
 
     useEffect(() => {
         // Apply colors immediately
-        const primaryHsl = hexToHsl(currentRestaurant.primary_color || '#000000');
-        const secondaryHsl = hexToHsl(currentRestaurant.secondary_color || '#ffffff');
+        // Apply colors immediately
+        const primaryHsl = hexToHsl(currentRestaurant.primary_color || '#22c55e');
+        const secondaryHsl = hexToHsl(currentRestaurant.secondary_color || '#000000');
+        const backgroundHsl = hexToHsl(currentRestaurant.background_color || '#ffffff');
+        const foregroundHsl = hexToHsl(currentRestaurant.foreground_color || '#000000');
 
+        // We'll use these for text/bg
         document.documentElement.style.setProperty('--primary', primaryHsl);
         document.documentElement.style.setProperty('--secondary', secondaryHsl);
-        document.documentElement.style.setProperty('--ring', primaryHsl);
-    }, [currentRestaurant.primary_color, currentRestaurant.secondary_color]);
+        document.documentElement.style.setProperty('--background', backgroundHsl);
+        document.documentElement.style.setProperty('--foreground', foregroundHsl);
+    }, [currentRestaurant]);
 
     useEffect(() => {
         const channel = supabase
@@ -213,7 +218,10 @@ export function RestaurantApp({
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] selection:bg-primary/30 text-foreground overflow-x-hidden font-sans">
+        <div
+            className="min-h-screen transition-colors duration-500 font-sans selection:bg-primary/30"
+            style={{ backgroundColor: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}
+        >
 
             {/* --- 1. HERO SECTION --- */}
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
@@ -221,10 +229,15 @@ export function RestaurantApp({
                     {currentRestaurant.banner_url ? (
                         <div className="relative w-full h-full">
                             <img src={currentRestaurant.banner_url} className="w-full h-full object-cover" alt="Banner" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-black/30" />
+                            <div
+                                className="absolute inset-0"
+                                style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, transparent 100%)' }}
+                            />
                         </div>
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-zinc-900 to-black" />
+                        <div className="w-full h-full"
+                            style={{ background: 'linear-gradient(to bottom right, hsl(var(--foreground) / 0.1), hsl(var(--background)))' }}
+                        />
                     )}
                 </motion.div>
 
@@ -235,7 +248,12 @@ export function RestaurantApp({
                         transition={{ delay: 0.2 }}
                         className="mb-8"
                     >
-                        <div className="h-32 w-32 rounded-[2.5rem] p-1.5 glass-card shadow-2xl flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                        <div className="h-32 w-32 rounded-[2.5rem] p-1.5 backdrop-blur-md shadow-2xl flex items-center justify-center overflow-hidden ring-1"
+                            style={{
+                                backgroundColor: 'hsl(var(--foreground) / 0.03)',
+                                ringColor: 'hsl(var(--foreground) / 0.1)'
+                            }}
+                        >
                             {currentRestaurant.logo_url ? (
                                 <img src={currentRestaurant.logo_url} className="w-full h-full object-cover rounded-[2.2rem]" alt="Logo" />
                             ) : (
@@ -252,27 +270,43 @@ export function RestaurantApp({
                         transition={{ delay: 0.4 }}
                         className="space-y-6 max-w-2xl"
                     >
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white drop-shadow-lg">
+                        <h1 className="text-5xl md:text-7xl font-black tracking-tighter drop-shadow-lg"
+                            style={{ color: 'hsl(var(--foreground))' }}
+                        >
                             {currentRestaurant.name}
                         </h1>
 
                         {/* Quick Info Pills */}
                         <div className="flex flex-wrap items-center justify-center gap-3">
                             {currentRestaurant.address && (
-                                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-sm font-medium text-zinc-300">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                                        borderColor: 'hsl(var(--foreground) / 0.1)',
+                                        color: 'hsl(var(--foreground) / 0.7)'
+                                    }}
+                                >
                                     <MapPin className="w-3.5 h-3.5 text-primary" />
                                     <span>{currentRestaurant.address}</span>
                                 </div>
                             )}
                             {currentRestaurant.phone && (
-                                <a href={`tel:${currentRestaurant.phone}`} className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-sm font-medium text-zinc-300 hover:bg-primary/20 hover:border-primary/30 transition-colors">
+                                <a href={`tel:${currentRestaurant.phone}`} className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors hover:bg-primary/10 hover:border-primary/30"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                                        borderColor: 'hsl(var(--foreground) / 0.1)',
+                                        color: 'hsl(var(--foreground) / 0.7)'
+                                    }}
+                                >
                                     <Phone className="w-3.5 h-3.5 text-primary" />
                                     <span>{currentRestaurant.phone}</span>
                                 </a>
                             )}
                         </div>
 
-                        <p className="text-lg text-zinc-400 font-medium opacity-80 line-clamp-2 max-w-lg mx-auto leading-relaxed">
+                        <p className="text-lg font-medium opacity-80 line-clamp-2 max-w-lg mx-auto leading-relaxed"
+                            style={{ color: 'hsl(var(--foreground))' }}
+                        >
                             {currentRestaurant.description || "Experience the art of fine dining, redefined."}
                         </p>
                     </motion.div>
@@ -282,8 +316,13 @@ export function RestaurantApp({
             {/* --- 2. FLOATING NAVIGATION --- */}
             <div className={cn(
                 "sticky top-4 z-40 transition-all duration-300 mx-4 md:mx-auto max-w-5xl rounded-2xl",
-                scrolled ? "bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl" : "bg-transparent"
-            )}>
+                scrolled ? "backdrop-blur-xl border shadow-2xl" : "bg-transparent"
+            )}
+                style={scrolled ? {
+                    backgroundColor: 'hsl(var(--background) / 0.8)',
+                    borderColor: 'hsl(var(--foreground) / 0.1)'
+                } : {}}
+            >
                 <div className="px-2 py-2 flex flex-col md:flex-row gap-4 items-center justify-between">
 
                     {/* SCROLLABLE CATEGORIES */}
@@ -307,8 +346,8 @@ export function RestaurantApp({
                                     className={cn(
                                         "px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap",
                                         activeCategory === cat.id
-                                            ? "bg-primary text-white shadow-[0_0_20px_rgba(var(--primary),0.4)] ring-1 ring-primary/50"
-                                            : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+                                            ? "bg-primary text-white shadow-lg shadow-primary/25 border-transparent"
+                                            : "bg-white/5 border-2 border-primary/20 text-[hsl(var(--foreground))] hover:border-primary/50"
                                     )}
                                 >
                                     {cat.name}
@@ -324,7 +363,8 @@ export function RestaurantApp({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Find a dish..."
-                            className="pl-10 h-10 bg-white/5 border-none text-white rounded-xl focus:ring-1 focus:ring-primary placeholder:text-zinc-600"
+                            className="pl-10 h-10 border-none rounded-full focus:ring-1 focus:ring-primary placeholder:text-zinc-500 font-medium transition-all"
+                            style={{ backgroundColor: 'rgba(125,125,125,0.05)', color: 'var(--foreground)' }}
                         />
                     </div>
                 </div>
@@ -333,52 +373,80 @@ export function RestaurantApp({
             {/* --- 3. MENU GRID --- */}
             <main className="container mx-auto px-4 py-12 min-h-[50vh]">
                 <AnimatePresence mode="wait">
+                    {/* Section Header */}
+                    <div className="flex items-center gap-3 mb-6 mt-2">
+                        <div className="w-1 h-6 bg-primary rounded-full" />
+                        <h2 className="text-xl font-black uppercase text-[hsl(var(--foreground))] tracking-wide">
+                            {activeCategory === 'all' ? 'Menu' : categories.find(c => c.id === activeCategory)?.name}
+                        </h2>
+                        <div className="h-px bg-[hsl(var(--foreground))] opacity-10 flex-1" />
+                        <span className="text-xs font-bold px-2 py-1 rounded-md bg-[hsl(var(--foreground))] text-[hsl(var(--background))] opacity-80">
+                            {filteredItems.length} items
+                        </span>
+                    </div>
+
                     {filteredItems.length > 0 ? (
                         <motion.div
                             key={activeCategory + searchQuery}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                            className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 pb-20"
                         >
                             {filteredItems.map((item, index) => (
                                 <motion.div
                                     key={item.id}
-                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: index * 0.05 }}
                                 >
-                                    <div className="group bg-zinc-900/40 border border-white/5 hover:border-primary/50 transition-all rounded-[2rem] overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.1)] flex flex-col h-full active:scale-[0.99]">
-                                        <div className="relative h-64 overflow-hidden">
+                                    <div className="group relative transition-all rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-primary/10 flex flex-col h-full active:scale-[0.99] duration-500"
+                                        style={{ backgroundColor: 'hsl(var(--foreground) / 0.04)' }}
+                                    >
+                                        <div className="relative h-72 overflow-hidden">
                                             {item.image_url ? (
                                                 <img
                                                     src={item.image_url}
                                                     alt={item.name}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-zinc-800"><Sparkles className="text-zinc-700 w-12 h-12" /></div>
+                                                <div className="w-full h-full flex items-center justify-center bg-zinc-900"><Sparkles className="text-zinc-800 w-16 h-16" /></div>
                                             )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                                            <div className="absolute bottom-5 left-6 right-6 flex justify-between items-end">
-                                                <h3 className="text-2xl font-black text-white line-clamp-1 drop-shadow-md">{item.name}</h3>
-                                                <Badge className="bg-white/10 backdrop-blur-md text-white border-white/20 text-lg px-3 py-1 font-bold">
+                                            {/* Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
+
+                                            <div className="absolute top-4 right-4 z-10">
+                                                <Badge className="bg-black/50 backdrop-blur-md text-white border-none text-base px-4 py-1.5 font-bold shadow-lg">
                                                     {currencySymbol}{item.price}
                                                 </Badge>
                                             </div>
+
+                                            <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                                                <h3 className="text-2xl font-black text-white leading-tight drop-shadow-lg mb-1">{item.name}</h3>
+                                            </div>
                                         </div>
 
-                                        <div className="p-6 flex flex-col flex-1 gap-4">
-                                            <p className="text-zinc-400 text-sm leading-relaxed line-clamp-2 flex-1 font-medium">
-                                                {item.description || "A delicious choice prepared with fresh ingredients."}
+                                        <div className="p-4 flex flex-col flex-1 gap-3">
+                                            <p className="text-[hsl(var(--foreground))] opacity-60 text-xs leading-relaxed line-clamp-2 font-medium hidden md:block">
+                                                {item.description || "A masterfully prepared dish using the finest ingredients."}
                                             </p>
-                                            <Button
-                                                onClick={() => addToCart(item)}
-                                                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all text-base"
-                                            >
-                                                Add to Order
-                                            </Button>
+                                            <div className="mt-auto flex flex-col gap-2">
+                                                <div className="flex items-center gap-2 md:hidden">
+                                                    <span className="text-[hsl(var(--foreground))] font-black text-sm">{currencySymbol}{item.price}</span>
+                                                    {/* Fake discount for demo matching reference aesthetics */}
+                                                    <span className="text-[hsl(var(--foreground))] opacity-40 text-xs line-through decoration-red-500/50">{currencySymbol}{(item.price * 1.2).toFixed(0)}</span>
+                                                </div>
+                                                <Button
+                                                    onClick={() => addToCart(item)}
+                                                    className="w-full h-9 md:h-12 rounded-xl hover:opacity-90 font-bold text-xs md:text-base shadow-sm active:scale-95 transition-all"
+                                                    style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
+                                                >
+                                                    <span className="md:hidden">Add</span>
+                                                    <span className="hidden md:inline">Add to Order</span>
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -405,10 +473,11 @@ export function RestaurantApp({
                     >
                         <div
                             onClick={() => setIsCartOpen(true)}
-                            className="text-white p-4 pl-5 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer active:scale-95 transition-all ring-1 ring-white/20 relative overflow-hidden group"
+                            className="text-white p-4 pl-5 rounded-2xl shadow-2xl flex items-center justify-between cursor-pointer active:scale-95 transition-all ring-1 relative overflow-hidden group"
                             style={{
-                                backgroundColor: '#22c55e', // Force Green as requested
-                                boxShadow: '0 20px 40px -10px #22c55e66'
+                                backgroundColor: currentRestaurant.primary_color || '#22c55e',
+                                boxShadow: `0 20px 40px -10px ${currentRestaurant.primary_color}66`,
+                                borderColor: 'hsl(var(--background) / 0.2)'
                             }}
                         >
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
@@ -431,33 +500,54 @@ export function RestaurantApp({
             </AnimatePresence>
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-                <SheetContent className="bg-[#09090b] border-l border-white/10 text-white sm:max-w-md w-full p-0 flex flex-col h-full">
-                    <div className="px-6 py-6 border-b border-white/10 bg-zinc-900/50">
-                        <SheetTitle className="text-3xl font-black text-white">Your Order</SheetTitle>
-                        <SheetDescription className="text-zinc-500 font-medium">Review delicious items</SheetDescription>
+                <SheetContent className="border-l sm:max-w-md w-full p-0 flex flex-col h-full shadow-2xl transition-colors duration-300"
+                    style={{
+                        backgroundColor: 'hsl(var(--background))',
+                        borderColor: 'hsl(var(--foreground) / 0.1)',
+                        color: 'hsl(var(--foreground))'
+                    }}
+                >
+                    <div className="px-6 py-6 border-b"
+                        style={{
+                            backgroundColor: 'hsl(var(--foreground) / 0.03)',
+                            borderColor: 'hsl(var(--foreground) / 0.05)'
+                        }}
+                    >
+                        <SheetTitle className="text-3xl font-black" style={{ color: 'hsl(var(--foreground))' }}>Your Order</SheetTitle>
+                        <SheetDescription className="font-medium opacity-60" style={{ color: 'hsl(var(--foreground))' }}>Review delicious items</SheetDescription>
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar">
                         {cart.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-zinc-600 space-y-4">
+                            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-50">
                                 <ShoppingCart className="w-16 h-16 opacity-50" />
                                 <p>Your cart is empty.</p>
                             </div>
                         ) : cart.map(item => (
-                            <div key={item.id} className="flex gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                                <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
+                            <div key={item.id} className="flex gap-4 p-4 rounded-2xl border transition-all"
+                                style={{
+                                    backgroundColor: 'hsl(var(--foreground) / 0.03)',
+                                    borderColor: 'hsl(var(--foreground) / 0.05)'
+                                }}
+                            >
+                                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: 'hsl(var(--foreground) / 0.1)' }}>
                                     {item.image_url && <img src={item.image_url} className="w-full h-full object-cover" />}
                                 </div>
                                 <div className="flex-1 flex flex-col justify-between">
                                     <div className="flex justify-between items-start">
-                                        <span className="font-bold text-lg leading-tight">{item.name}</span>
-                                        <span className="font-bold text-primary">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
+                                        <span className="font-bold text-lg leading-tight line-clamp-2" style={{ color: 'hsl(var(--foreground))' }}>{item.name}</span>
+                                        <span className="font-bold text-primary whitespace-nowrap ml-2">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-0 bg-black/50 rounded-lg p-0.5 border border-white/10">
-                                            <button onClick={() => updateQuantity(item.id, -1)} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors"><Minus className="w-4 h-4" /></button>
+                                        <div className="flex items-center gap-0 rounded-lg p-0.5 border"
+                                            style={{
+                                                backgroundColor: 'hsl(var(--background) / 0.5)',
+                                                borderColor: 'hsl(var(--foreground) / 0.1)'
+                                            }}
+                                        >
+                                            <button onClick={() => updateQuantity(item.id, -1)} className="p-1.5 rounded-md hover:bg-black/5 transition-colors"><Minus className="w-4 h-4 opacity-70" /></button>
                                             <span className="font-bold w-6 text-center text-sm">{item.quantity}</span>
-                                            <button onClick={() => updateQuantity(item.id, 1)} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors"><Plus className="w-4 h-4" /></button>
+                                            <button onClick={() => updateQuantity(item.id, 1)} className="p-1.5 rounded-md hover:bg-black/5 transition-colors"><Plus className="w-4 h-4 opacity-70" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -465,35 +555,55 @@ export function RestaurantApp({
                         ))}
                     </div>
 
-                    <div className="p-6 bg-zinc-900/80 border-t border-white/10 space-y-5 backdrop-blur-xl">
+                    <div className="p-6 border-t space-y-5 backdrop-blur-xl"
+                        style={{
+                            backgroundColor: 'hsl(var(--background) / 0.8)',
+                            borderColor: 'hsl(var(--foreground) / 0.1)'
+                        }}
+                    >
                         <div className="space-y-3">
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="col-span-2 space-y-1">
-                                    <Label className="text-xs font-bold uppercase text-zinc-500 ml-1">Name</Label>
+                                    <Label className="text-xs font-bold uppercase ml-1 opacity-50">Name</Label>
                                     <Input
-                                        placeholder="John Doe"
+                                        placeholder="Your Name"
                                         value={customerName}
                                         onChange={e => setCustomerName(e.target.value)}
-                                        className="bg-black/50 border-white/10 h-12 rounded-xl focus:ring-primary focus:border-primary/50 text-base"
+                                        className="h-12 rounded-xl focus:ring-primary focus:border-primary/50 text-base"
+                                        style={{
+                                            backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                                            borderColor: 'hsl(var(--foreground) / 0.1)',
+                                            color: 'hsl(var(--foreground))'
+                                        }}
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-xs font-bold uppercase text-zinc-500 ml-1">Table</Label>
+                                    <Label className="text-xs font-bold uppercase ml-1 opacity-50">Table</Label>
                                     <Input
                                         placeholder="#"
                                         value={tableNumber}
                                         onChange={e => setTableNumber(e.target.value)}
-                                        className="bg-black/50 border-white/10 h-12 rounded-xl focus:ring-primary focus:border-primary/50 text-base text-center"
+                                        className="h-12 rounded-xl focus:ring-primary focus:border-primary/50 text-base text-center"
+                                        style={{
+                                            backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                                            borderColor: 'hsl(var(--foreground) / 0.1)',
+                                            color: 'hsl(var(--foreground))'
+                                        }}
                                     />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-xs font-bold uppercase text-zinc-500 ml-1">Note (Optional)</Label>
+                                <Label className="text-xs font-bold uppercase ml-1 opacity-50">Note (Optional)</Label>
                                 <Input
-                                    placeholder="Extra sauce, no onions..."
+                                    placeholder="Extra sauce, allergies..."
                                     value={orderNotes}
                                     onChange={e => setOrderNotes(e.target.value)}
-                                    className="bg-black/50 border-white/10 h-11 rounded-xl focus:ring-primary focus:border-primary/50 text-sm"
+                                    className="h-11 rounded-xl focus:ring-primary focus:border-primary/50 text-sm"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                                        borderColor: 'hsl(var(--foreground) / 0.1)',
+                                        color: 'hsl(var(--foreground))'
+                                    }}
                                 />
                             </div>
                         </div>
@@ -511,36 +621,44 @@ export function RestaurantApp({
             </Sheet>
 
             {/* --- 5. LEGENDARY FOOTER --- */}
-            <footer className="relative bg-[#080808] border-t border-white/5 pt-20 pb-12 mt-20">
+            <footer className="relative pt-20 pb-12 mt-20"
+                style={{
+                    backgroundColor: 'hsl(var(--foreground) / 0.02)',
+                    borderTop: '1px solid hsl(var(--foreground) / 0.05)'
+                }}
+            >
                 <div className="container mx-auto px-8">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 mb-16">
                         {/* Brand Column */}
                         <div className="md:col-span-5 space-y-6 text-center md:text-left">
                             <div className="flex items-center justify-center md:justify-start gap-4">
-                                <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-white/10 text-primary font-black text-xl shadow-lg">
-                                    {currentRestaurant.name.charAt(0).toUpperCase()}
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center border shadow-lg"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--background))',
+                                        borderColor: 'hsl(var(--foreground) / 0.1)',
+                                        color: 'var(--primary)'
+                                    }}
+                                >
+                                    <span className="font-black text-xl">{currentRestaurant.name.charAt(0).toUpperCase()}</span>
                                 </div>
-                                <h3 className="text-3xl font-black text-white tracking-tighter">{currentRestaurant.name}</h3>
+                                <h3 className="text-3xl font-black tracking-tighter" style={{ color: 'hsl(var(--foreground))' }}>{currentRestaurant.name}</h3>
                             </div>
-                            <p className="text-zinc-500 text-base leading-relaxed max-w-sm mx-auto md:mx-0 font-medium">
+                            <p className="text-base leading-relaxed max-w-sm mx-auto md:mx-0 font-medium opacity-60" style={{ color: 'hsl(var(--foreground))' }}>
                                 {currentRestaurant.description || "Crafting unforgettable dining experiences with the finest ingredients and passion for culinary excellence."}
                             </p>
 
                             {/* Socials */}
                             <div className="flex gap-3 justify-center md:justify-start pt-2">
                                 {[
-                                    { Icon: Instagram, url: currentRestaurant.instagram_url },
-                                    { Icon: Facebook, url: currentRestaurant.facebook_url },
-                                    { Icon: Globe, url: currentRestaurant.website_url }
-                                ].map((social, i) => social.url && (
-                                    <a
-                                        key={i}
-                                        href={social.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="w-10 h-10 rounded-full bg-white/5 hover:bg-primary hover:text-white text-zinc-400 flex items-center justify-center transition-all duration-300 border border-white/5 hover:scale-110"
+                                    { icon: Facebook, href: currentRestaurant.facebook_url },
+                                    { icon: Instagram, href: currentRestaurant.instagram_url },
+                                    { icon: Globe, href: currentRestaurant.website_url }
+                                ].map((Social, i) => Social.href && (
+                                    <a key={i} href={Social.href} target="_blank" rel="noopener noreferrer"
+                                        className="w-10 h-10 rounded-full flex items-center justify-center border transition-all hover:scale-110 active:scale-95 text-[hsl(var(--foreground))]"
+                                        style={{ borderColor: 'hsl(var(--foreground) / 0.2)', backgroundColor: 'hsl(var(--background))' }}
                                     >
-                                        <social.Icon className="w-5 h-5" />
+                                        <Social.icon className="w-4 h-4" />
                                     </a>
                                 ))}
                             </div>

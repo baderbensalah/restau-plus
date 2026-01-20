@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { DollarSign, Utensils, Users, ShoppingBag, Clock, TrendingUp } from "lucide-react";
+import { DollarSign, Utensils, Users, ShoppingBag, Clock, TrendingUp, Settings, ExternalLink, Menu } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const container = {
     hidden: { opacity: 0 },
@@ -26,6 +27,7 @@ const item = {
 
 interface DashboardStats {
     totalRevenue: number;
+    dailyRevenue: number;
     weeklyTotalRevenue: number;
     activeOrders: number;
     activeTables: number;
@@ -43,24 +45,7 @@ export function DashboardUI({ stats }: { stats: DashboardStats }) {
         setMounted(true);
     }, []);
 
-    // Custom Tooltip for Chart
-    const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-background/80 backdrop-blur-md border border-border/50 p-4 rounded-xl shadow-xl">
-                    <p className="text-sm font-medium mb-2">{label}</p>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-sm text-muted-foreground">Revenue:</span>
-                        <span className="text-sm font-bold text-foreground">
-                            {stats.currency}{payload[0].value.toLocaleString()}
-                        </span>
-                    </div>
-                </div>
-            );
-        }
-        return null;
-    };
+    // ... Tooltip logic ...
 
     return (
         <motion.div
@@ -69,23 +54,56 @@ export function DashboardUI({ stats }: { stats: DashboardStats }) {
             animate="show"
             className="space-y-6 pt-4"
         >
-            {/* Header omitted as sidebar handles brand */}
+            {/* QUICK ACTIONS */}
+            <div className="flex flex-wrap gap-4">
+                <Link href="/dashboard/owner/orders">
+                    <Button variant="outline" className="gap-2 h-10 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 hover:text-white">
+                        <ShoppingBag className="w-4 h-4 text-teal-500" />
+                        View Active Orders
+                    </Button>
+                </Link>
+                <Link href="/dashboard/owner/menu">
+                    <Button variant="outline" className="gap-2 h-10 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 hover:text-white">
+                        <Menu className="w-4 h-4 text-indigo-500" />
+                        Edit Menu
+                    </Button>
+                </Link>
+                <Link href="/dashboard/owner/settings">
+                    <Button variant="outline" className="gap-2 h-10 border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 text-zinc-300 hover:text-white">
+                        <Settings className="w-4 h-4 text-zinc-500" />
+                        Settings
+                    </Button>
+                </Link>
+            </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {/* Primary Card - Berry Style Teal */}
+                {/* 1. Total Revenue - Primary */}
                 <motion.div variants={item} className="md:col-span-1 lg:col-span-1">
                     <StatCard
                         title="Total Revenue"
                         value={`${stats.currency}${stats.totalRevenue.toLocaleString()}`}
                         icon={DollarSign}
-                        trend="vs last month"
-                        trendUp={stats.totalRevenue > 0}
+                        trend="All time earnings"
+                        trendUp={true}
                         variant="primary"
                         className="h-full"
                     />
                 </motion.div>
 
-                {/* Secondary Cards - Dark Blue/Grey */}
+                {/* 2. Daily Revenue - New Card */}
+                <motion.div variants={item} className="md:col-span-1 lg:col-span-1">
+                    <StatCard
+                        title="Today's Revenue"
+                        value={`${stats.currency}${stats.dailyRevenue.toLocaleString()}`}
+                        icon={TrendingUp}
+                        trend="Performance today"
+                        trendUp={stats.dailyRevenue > 0}
+                        variant="default" // Changed to match dark theme style
+                        className="h-full bg-zinc-900 border-l-4 border-l-teal-500" // Special accent
+                    />
+                </motion.div>
+
+                {/* 3. Active Orders */}
                 <motion.div variants={item}>
                     <StatCard
                         title="Active Orders"
@@ -95,21 +113,14 @@ export function DashboardUI({ stats }: { stats: DashboardStats }) {
                         trendUp={true}
                     />
                 </motion.div>
+
+                {/* 4. Live Tables */}
                 <motion.div variants={item}>
                     <StatCard
                         title="Live Tables"
                         value={stats.activeTables}
                         icon={Users}
                         trend="Currently seated"
-                        trendUp={true}
-                    />
-                </motion.div>
-                <motion.div variants={item}>
-                    <StatCard
-                        title="Total Orders"
-                        value={stats.totalOrdersToday}
-                        icon={Utensils}
-                        trend="Daily volume"
                         trendUp={true}
                     />
                 </motion.div>
