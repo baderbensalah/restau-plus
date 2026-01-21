@@ -28,7 +28,7 @@ const securityHeaders = [
   },
 ];
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   // Security X100: Add custom security headers
   async headers() {
     return [

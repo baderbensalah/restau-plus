@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
     const totalUsers = profiles?.length || 0;
     const activeUsers = profiles?.filter(p => p.status === 'active' || p.status === 'approved').length || 0;
     const pendingUsers = profiles?.filter(p => p.status === 'pending').length || 0;
-    const totalRestaurants = profiles?.filter(p => p.restaurant?.id).length || 0;
+    const totalRestaurants = profiles?.filter(p => Array.isArray(p.restaurant) && p.restaurant.length > 0).length || 0;
 
     return (
         <div className="min-h-screen bg-black text-white p-6 md:p-10 space-y-10 animate-in fade-in duration-500">

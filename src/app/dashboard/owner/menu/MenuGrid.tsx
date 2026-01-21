@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, Image as ImageIcon, Search } from "lucide-react";
+import { Plus, Edit2, Trash2, Image as ImageIcon, Search, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -26,17 +26,22 @@ interface MenuItem {
     category_id?: string;
 }
 
-export function MenuGrid({ initialItems, restaurantId, currency }: { initialItems: MenuItem[], restaurantId: string, currency: string }) {
+export function MenuGrid({ initialItems, categories, restaurantId, currency }: { initialItems: MenuItem[], categories: any[], restaurantId: string, currency: string }) {
     const [items, setItems] = useState<MenuItem[]>(initialItems);
+    const [localCategories, setLocalCategories] = useState(categories);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
     const supabase = createClient();
 
-    const initialFormState = { id: "", name: "", description: "", price: "", image_url: "", is_available: true };
+    const initialFormState = { id: "", name: "", description: "", price: "", image_url: "", is_available: true, category_id: "" };
     const [formData, setFormData] = useState(initialFormState);
     const [isEditing, setIsEditing] = useState(false);
+
+    // Category Creation
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
 
     const getCurrencySymbol = (code: string) => {
         if (code === 'QAR') return 'QR';
@@ -51,10 +56,15 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
         item.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const [selectedCurrency, setSelectedCurrency] = useState(currency);
+
     const openAdd = () => {
         setFormData(initialFormState);
         setIsEditing(false);
         setIsDialogOpen(true);
+        setSelectedCurrency(currency);
+        setIsCreatingCategory(false); // Reset
+        setNewCategoryName(""); // Reset
     };
 
     const openEdit = (item: MenuItem) => {
@@ -64,10 +74,14 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
             description: item.description || "",
             price: item.price.toString(),
             image_url: item.image_url || "",
-            is_available: item.is_available
+            is_available: item.is_available,
+            category_id: item.category_id || ""
         });
         setIsEditing(true);
         setIsDialogOpen(true);
+        setSelectedCurrency(currency);
+        setIsCreatingCategory(false);
+        setNewCategoryName("");
     };
 
 
@@ -102,13 +116,51 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            // Update currency if changed
+            if (selectedCurrency !== currency) {
+                const { error: currError } = await supabase
+                    .from('restaurants')
+                    .update({ currency: selectedCurrency })
+                    .eq('id', restaurantId);
+
+                if (currError) {
+                    console.error("Currency Update Error", currError);
+                    toast.error("Failed to update store currency");
+                } else {
+                    toast.success(`Store currency updated to ${selectedCurrency}`);
+                }
+            }
+
+            let categoryId = formData.category_id;
+
+            // HANDLE CATEGORY CREATION
+            if (isCreatingCategory && newCategoryName.trim()) {
+                const { data: newCat, error: catError } = await supabase
+                    .from('categories')
+                    .insert({
+                        restaurant_id: restaurantId,
+                        name: newCategoryName.trim(),
+                        sort_order: (localCategories.length * 10) // Basic sort logic
+                    })
+                    .select()
+                    .single();
+
+                if (catError) throw catError;
+
+                // Update local state immediately
+                setLocalCategories([...localCategories, newCat]);
+                categoryId = newCat.id;
+                toast.success(`Category '${newCategoryName}' created!`);
+            }
+
             const payload = {
                 restaurant_id: restaurantId,
                 name: formData.name,
                 description: formData.description,
                 price: parseFloat(formData.price),
                 image_url: formData.image_url || null,
-                is_available: formData.is_available
+                is_available: formData.is_available,
+                category_id: categoryId || null
             };
 
             if (isEditing) {
@@ -130,9 +182,10 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
 
             setIsDialogOpen(false);
             router.refresh();
-        } catch (error) {
-            console.error("Error saving item:", error);
-            toast.error("Failed to save item");
+        } catch (error: any) {
+            console.error("Error saving item (Full Details):", error);
+            const msg = error?.message || error?.details || "Failed to save item";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -188,8 +241,81 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="price" className="text-right">Price</Label>
-                            <Input id="price" type="number" className="col-span-3" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+                            <div className="col-span-3 flex gap-2">
+                                <div className="relative flex-1">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">
+                                        {currencySymbol}
+                                    </span>
+                                    <Input
+                                        id="price"
+                                        type="number"
+                                        className="pl-8"
+                                        value={formData.price}
+                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                    />
+                                </div>
+                                <select
+                                    className="w-32 h-10 px-3 rounded-md border border-input bg-background/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                    value={selectedCurrency}
+                                    onChange={(e) => setSelectedCurrency(e.target.value)}
+                                >
+                                    <option value="USD">USD ($)</option>
+                                    <option value="MAD">MAD (DH)</option>
+                                    <option value="QAR">QAR (QR)</option>
+                                </select>
+                            </div>
                         </div>
+
+                        {/* Category Selection with CREATE NEW logic */}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Category</Label>
+                            <div className="col-span-3 space-y-2">
+                                {!isCreatingCategory ? (
+                                    <div className="flex gap-2">
+                                        <select
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            value={formData.category_id}
+                                            onChange={(e) => {
+                                                if (e.target.value === 'new') {
+                                                    setIsCreatingCategory(true);
+                                                    setFormData({ ...formData, category_id: "" });
+                                                } else {
+                                                    setFormData({ ...formData, category_id: e.target.value });
+                                                }
+                                            }}
+                                        >
+                                            <option value="">Select a Category...</option>
+                                            {localCategories.map(cat => (
+                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                            ))}
+                                            <option value="new" className="font-bold text-primary">+ Create New Category</option>
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex gap-2"
+                                    >
+                                        <Input
+                                            placeholder="Enter new category name..."
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            autoFocus
+                                            className="bg-primary/10 border-primary/50"
+                                        />
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            onClick={() => { setIsCreatingCategory(false); setNewCategoryName(""); }}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </motion.div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="desc" className="text-right">Info</Label>
                             <Textarea id="desc" className="col-span-3" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
@@ -199,12 +325,18 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
                             <div className="col-span-3 space-y-2">
                                 <div className="flex items-center gap-4">
                                     {formData.image_url ? (
-                                        <div className="relative group rounded-lg overflow-hidden border border-border w-16 h-16 shrink-0">
+                                        <div className="relative group rounded-lg overflow-hidden border border-border w-16 h-16 shrink-0 shadow-sm">
                                             <img src={formData.image_url} className="w-full h-full object-cover" />
+                                            <button
+                                                onClick={() => setFormData({ ...formData, image_url: "" })}
+                                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <Trash2 className="w-4 h-4 text-white" />
+                                            </button>
                                         </div>
                                     ) : (
-                                        <div className="w-16 h-16 shrink-0 rounded-lg border border-border bg-muted flex items-center justify-center">
-                                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                        <div className="w-16 h-16 shrink-0 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center">
+                                            <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
                                         </div>
                                     )}
                                     <div className="flex-1 space-y-2">
@@ -212,16 +344,16 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
                                             type="file"
                                             accept="image/*"
                                             onChange={handleFileUpload}
-                                            className="cursor-pointer file:cursor-pointer"
+                                            className="cursor-pointer file:cursor-pointer text-xs"
                                         />
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">OR</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">URL</span>
                                             <Input
                                                 type="text"
-                                                placeholder="Paste image URL..."
+                                                placeholder="https://..."
                                                 value={formData.image_url || ""}
                                                 onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                                                className="pl-10 font-mono text-xs"
+                                                className="pl-10 font-mono text-xs h-9"
                                             />
                                         </div>
                                     </div>
@@ -231,7 +363,7 @@ export function MenuGrid({ initialItems, restaurantId, currency }: { initialItem
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto">
+                        <Button onClick={handleSubmit} disabled={loading} className="w-full sm:w-auto font-bold shadow-lg shadow-primary/20">
                             {loading ? "Saving..." : "Save Changes"}
                         </Button>
                     </DialogFooter>

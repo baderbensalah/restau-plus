@@ -395,10 +395,10 @@ export function SettingsClient({ restaurant }: { restaurant: any }) {
                                     </div>
                                     <div className="grid gap-2">
                                         <Label className="text-zinc-300">Description</Label>
-                                        <Input
+                                        <Textarea
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            className="h-11 bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-teal-500 focus-visible:border-teal-500"
+                                            className="min-h-[80px] bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-teal-500 focus-visible:border-teal-500"
                                             placeholder="Brief tagline or description"
                                         />
                                     </div>
@@ -451,16 +451,6 @@ export function SettingsClient({ restaurant }: { restaurant: any }) {
                                             label="Secondary Accent"
                                             value={formData.secondary_color}
                                             onChange={(val) => setFormData(prev => ({ ...prev, secondary_color: val }))}
-                                        />
-                                        <ProColorPicker
-                                            label="Page Background"
-                                            value={formData.background_color || '#ffffff'}
-                                            onChange={(val) => setFormData(prev => ({ ...prev, background_color: val }))}
-                                        />
-                                        <ProColorPicker
-                                            label="Text Color"
-                                            value={formData.foreground_color || '#09090b'}
-                                            onChange={(val) => setFormData(prev => ({ ...prev, foreground_color: val }))}
                                         />
                                     </CardContent>
                                 </Card>

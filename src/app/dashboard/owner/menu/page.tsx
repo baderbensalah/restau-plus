@@ -34,5 +34,12 @@ export default async function MenuManagementPage() {
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false });
 
-    return <MenuGrid initialItems={menuItems || []} restaurantId={restaurantId} currency={currency} />;
+    // Fetch Categories
+    const { data: categories } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('sort_order', { ascending: true });
+
+    return <MenuGrid initialItems={menuItems || []} categories={categories || []} restaurantId={restaurantId} currency={currency} />;
 }
