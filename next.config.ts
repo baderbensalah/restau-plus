@@ -30,14 +30,6 @@ const securityHeaders = [
 
 const nextConfig = {
   // Security X100: Add custom security headers
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: securityHeaders,
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {
@@ -54,6 +46,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  trailingSlash: true,
 };
 
 export default nextConfig;
